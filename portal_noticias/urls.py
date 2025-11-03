@@ -15,8 +15,34 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from articles import views as article_views
+from users import views as user_views
+from comments import views as comment_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('summernote/', include('django_summernote.urls')),
+    
+    path('', article_views.home, name='home'),
+    path('article/<slug:slug>/', article_views.article_detail, name='article_detail'),
+    path('article/create/', article_views.article_create, name='article_create'),
+    path('article/<slug:slug>/edit/', article_views.article_edit, name='article_edit'),
+    path('article/<slug:slug>/delete/', article_views.article_delete, name='article_delete'),
+    path('article/<int:article_id>/like/', article_views.toggle_like, name='toggle_like'),
+    
+    path('comment/<int:article_id>/add/', comment_views.add_comment, name='add_comment'),
+    path('comment/<int:comment_id>/delete/', comment_views.delete_comment, name='delete_comment'),
+    
+    path('register/', user_views.register_view, name='register'),
+    path('login/', user_views.login_view, name='login'),
+    path('logout/', user_views.logout_view, name='logout'),
+    
+    path('api/', include('api.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

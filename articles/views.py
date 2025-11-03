@@ -1,3 +1,177 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.utils.text import slugify
+from .models import Article, Like
+from comments.models import Comment
+import folium
 
-# Create your views here.
+
+def home(request):
+    articles_list = Article.objects.filter(published=True)
+    featured_articles = Article.objects.filter(published=True, featured=True)[:3]
+    
+    paginator = Paginator(articles_list, 9)
+    page_number = request.GET.get('page')
+    articles = paginator.get_page(page_number)
+    
+    return render(request, 'articles/home.html', {
+        'articles': articles,
+        'featured_articles': featured_articles
+    })
+
+
+def article_detail(request, slug):
+    article = get_object_or_404(Article, slug=slug, published=True)
+    article.increment_views()
+    
+    comments = article.comments.filter(approved=True)
+    user_has_liked = False
+    if request.user.is_authenticated:
+        user_has_liked = article.likes.filter(user=request.user).exists()
+    
+    map_html = None
+    if article.latitude and article.longitude:
+        m = folium.Map(location=[article.latitude, article.longitude], zoom_start=13)
+        folium.Marker(
+            [article.latitude, article.longitude],
+            popup=article.location_name or article.title,
+            tooltip=article.location_name
+        ).add_to(m)
+        map_html = m._repr_html_()
+    
+    return render(request, 'articles/article_detail.html', {
+        'article': article,
+        'comments': comments,
+        'user_has_liked': user_has_liked,
+        'map_html': map_html
+    })
+
+
+@login_required
+def article_create(request):
+    if request.user.profile.role not in ['jornalista', 'admin']:
+        messages.error(request, 'Apenas jornalistas podem criar artigos.')
+        return redirect('home')
+    
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        content = request.POST.get('content')
+        excerpt = request.POST.get('excerpt', '')
+        image = request.FILES.get('image')
+        published = request.POST.get('published') == 'on'
+        featured = request.POST.get('featured') == 'on'
+        tags = request.POST.get('tags', '')
+        
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        location_name = request.POST.get('location_name', '')
+        
+        slug = slugify(title)
+        base_slug = slug
+        counter = 1
+        while Article.objects.filter(slug=slug).exists():
+            slug = f'{base_slug}-{counter}'
+            counter += 1
+        
+        article = Article.objects.create(
+            title=title,
+            slug=slug,
+            content=content,
+            excerpt=excerpt,
+            image=image,
+            author=request.user,
+            published=published,
+            featured=featured,
+            latitude=float(latitude) if latitude else None,
+            longitude=float(longitude) if longitude else None,
+            location_name=location_name
+        )
+        
+        if tags:
+            article.tags.add(*[tag.strip() for tag in tags.split(',')])
+        
+        messages.success(request, 'Artigo criado com sucesso!')
+        return redirect('article_detail', slug=article.slug)
+    
+    return render(request, 'articles/article_form.html')
+
+
+@login_required
+def article_edit(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    
+    if article.author != request.user and request.user.profile.role != 'admin':
+        messages.error(request, 'Você não tem permissão para editar este artigo.')
+        return redirect('article_detail', slug=slug)
+    
+    if request.method == 'POST':
+        article.title = request.POST.get('title')
+        article.content = request.POST.get('content')
+        article.excerpt = request.POST.get('excerpt', '')
+        article.published = request.POST.get('published') == 'on'
+        article.featured = request.POST.get('featured') == 'on'
+        
+        if request.FILES.get('image'):
+            article.image = request.FILES.get('image')
+        
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        article.latitude = float(latitude) if latitude else None
+        article.longitude = float(longitude) if longitude else None
+        article.location_name = request.POST.get('location_name', '')
+        
+        new_slug = slugify(article.title)
+        if new_slug != article.slug:
+            base_slug = new_slug
+            counter = 1
+            while Article.objects.filter(slug=new_slug).exclude(id=article.id).exists():
+                new_slug = f'{base_slug}-{counter}'
+                counter += 1
+            article.slug = new_slug
+        article.save()
+        
+        tags = request.POST.get('tags', '')
+        if tags:
+            article.tags.clear()
+            article.tags.add(*[tag.strip() for tag in tags.split(',')])
+        
+        messages.success(request, 'Artigo atualizado com sucesso!')
+        return redirect('article_detail', slug=article.slug)
+    
+    return render(request, 'articles/article_form.html', {'article': article})
+
+
+@login_required
+def article_delete(request, slug):
+    article = get_object_or_404(Article, slug=slug)
+    
+    if article.author != request.user and request.user.profile.role != 'admin':
+        messages.error(request, 'Você não tem permissão para deletar este artigo.')
+        return redirect('article_detail', slug=slug)
+    
+    if request.method == 'POST':
+        article.delete()
+        messages.success(request, 'Artigo deletado com sucesso!')
+        return redirect('home')
+    
+    return render(request, 'articles/article_confirm_delete.html', {'article': article})
+
+
+@login_required
+def toggle_like(request, article_id):
+    article = get_object_or_404(Article, id=article_id)
+    like, created = Like.objects.get_or_create(user=request.user, article=article)
+    
+    if not created:
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    
+    return JsonResponse({
+        'liked': liked,
+        'total_likes': article.total_likes()
+    })
