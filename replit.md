@@ -1,9 +1,20 @@
-# Portal de Notícias - Django
+# Conecta ZL: Notícias que nos unem
 
 ## Visão Geral
-Portal de notícias completo desenvolvido em Django + Python com sistema de autenticação, publicação de artigos, comentários moderados, curtidas, geolocalização e API REST.
+Portal de notícias da Zona Leste desenvolvido em Django + Python com sistema de autenticação, publicação de artigos, comentários moderados, curtidas, geolocalização e API REST. Redesenhado completamente com nova identidade visual roxa (#6E349D) e foco na comunidade local.
 
 ## Mudanças Recentes
+- **04/11/2025**: Redesign Completo "Conecta ZL: Notícias que nos unem"
+  - ✅ **Nova Identidade Visual**: Paleta roxa (#6E349D primary, #EFEDE3 secondary, #1E1E2A support)
+  - ✅ **Novas Fontes**: Almarai Bold para títulos, Kameron para subtítulos
+  - ✅ **Landing Page Redesenhada**: Hero banner roxo com "Conectando a Comunidade com Fatos e Notícias do Bairro!"
+  - ✅ **Página de Destaques**: Layout moderno com destaque principal e seções de mais curtidas/comentadas
+  - ✅ **Feed de Notícias**: Estilo Twitter com cards modernos e ações interativas
+  - ✅ **Página de Perfil do Jornalista**: Layout de rede social com banner, avatar, estatísticas e grid de publicações
+  - ✅ **Navbar Modernizada**: Logo circular roxo + "Conecta ZL" + tagline "Notícias que nos unem"
+  - ✅ **Seção de Interação Comunitária**: "O que está acontecendo no seu bairro?" com botão Foto/Vídeo
+  - ✅ **Bug Fix Crítico**: Guards de autenticação adicionados para acesso seguro a user.profile
+
 - **04/11/2025**: Sistema de Administração Completo Implementado
   - ✅ Sistema de aprovação de artigos (apenas admins podem aprovar publicações)
   - ✅ Dashboard administrativo com estatísticas e gráficos em tempo real
@@ -55,7 +66,9 @@ portal_noticias/          # Projeto principal Django
 - **Mapas**: folium
 - **Imagens**: Pillow
 - **Banco de Dados**: PostgreSQL (Neon)
-- **Frontend**: HTML5, CSS3, TailwindCSS, JavaScript Vanilla
+- **Frontend**: HTML5, CSS3, JavaScript Vanilla
+- **Fontes**: Google Fonts (Almarai Bold, Kameron)
+- **Design**: Sistema de cores personalizado (Purple #6E349D, Off-white #EFEDE3)
 
 ## Funcionalidades Principais
 
@@ -149,7 +162,10 @@ http://localhost:5000/admin/
 ## Estrutura de URLs
 
 ### Principais
-- `/` - Página inicial com listagem de artigos
+- `/` - Landing page com hero banner e feed de notícias
+- `/destaques/` - Página de destaques da semana
+- `/noticias/` - Feed completo de notícias (estilo Twitter)
+- `/jornalista/<username>/` - Perfil do jornalista com publicações
 - `/article/<slug>/` - Detalhe do artigo
 - `/article/create/` - Criar novo artigo (jornalista/admin)
 - `/article/<slug>/edit/` - Editar artigo
