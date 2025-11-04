@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from articles import views as article_views
+from articles import admin_views
 from users import views as user_views
 from comments import views as comment_views
 
@@ -39,6 +40,15 @@ urlpatterns = [
     path('register/', user_views.register_view, name='register'),
     path('login/', user_views.login_view, name='login'),
     path('logout/', user_views.logout_view, name='logout'),
+    
+    path('admin-dashboard/', admin_views.admin_dashboard, name='admin_dashboard'),
+    path('admin-dashboard/articles/pending/', admin_views.admin_articles_pending, name='admin_articles_pending'),
+    path('admin-dashboard/articles/all/', admin_views.admin_articles_all, name='admin_articles_all'),
+    path('admin-dashboard/article/<int:article_id>/approve/', admin_views.admin_article_approve, name='admin_article_approve'),
+    path('admin-dashboard/comments/pending/', admin_views.admin_comments_pending, name='admin_comments_pending'),
+    path('admin-dashboard/comment/<int:comment_id>/approve/', admin_views.admin_comment_approve, name='admin_comment_approve'),
+    path('admin-dashboard/users/', admin_views.admin_users_list, name='admin_users_list'),
+    path('admin-dashboard/user/<int:user_id>/edit/', admin_views.admin_user_toggle_role, name='admin_user_toggle_role'),
     
     path('api/', include('api.urls')),
 ]

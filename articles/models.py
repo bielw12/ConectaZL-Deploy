@@ -5,6 +5,12 @@ from taggit.managers import TaggableManager
 
 
 class Article(models.Model):
+    APPROVAL_STATUS_CHOICES = [
+        ('pending', 'Pendente'),
+        ('approved', 'Aprovado'),
+        ('rejected', 'Rejeitado'),
+    ]
+    
     title = models.CharField(max_length=255, verbose_name='Título')
     slug = models.SlugField(max_length=255, unique=True)
     content = models.TextField(verbose_name='Conteúdo')
@@ -16,6 +22,23 @@ class Article(models.Model):
     published = models.BooleanField(default=False, verbose_name='Publicado')
     views = models.PositiveIntegerField(default=0, verbose_name='Visualizações')
     featured = models.BooleanField(default=False, verbose_name='Destaque')
+    
+    approval_status = models.CharField(
+        max_length=20, 
+        choices=APPROVAL_STATUS_CHOICES, 
+        default='pending',
+        verbose_name='Status de Aprovação'
+    )
+    approval_notes = models.TextField(blank=True, verbose_name='Notas de Aprovação')
+    approved_by = models.ForeignKey(
+        User, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='approved_articles',
+        verbose_name='Aprovado por'
+    )
+    approved_at = models.DateTimeField(null=True, blank=True, verbose_name='Aprovado em')
     
     tags = TaggableManager(verbose_name='Tags', blank=True)
     

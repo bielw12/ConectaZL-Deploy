@@ -33,7 +33,11 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Bem-vindo, {username}!')
-                return redirect('home')
+                
+                if user.profile.role == 'admin':
+                    return redirect('admin_dashboard')
+                else:
+                    return redirect('home')
     else:
         form = AuthenticationForm()
     return render(request, 'users/login.html', {'form': form})

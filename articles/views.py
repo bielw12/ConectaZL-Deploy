@@ -10,8 +10,8 @@ import folium
 
 
 def home(request):
-    articles_list = Article.objects.filter(published=True)
-    featured_articles = Article.objects.filter(published=True, featured=True)[:3]
+    articles_list = Article.objects.filter(published=True, approval_status='approved')
+    featured_articles = Article.objects.filter(published=True, approval_status='approved', featured=True)[:3]
     
     paginator = Paginator(articles_list, 9)
     page_number = request.GET.get('page')
@@ -24,8 +24,23 @@ def home(request):
 
 
 def article_detail(request, slug):
-    article = get_object_or_404(Article, slug=slug, published=True)
-    article.increment_views()
+    article = get_object_or_404(Article, slug=slug)
+    
+    is_author = request.user.is_authenticated and article.author == request.user
+    is_admin = request.user.is_authenticated and request.user.profile.role == 'admin'
+    is_public = article.published and article.approval_status == 'approved'
+    
+    if not (is_public or is_author or is_admin):
+        if not article.published:
+            messages.error(request, 'Este artigo não está publicado.')
+        elif article.approval_status != 'approved':
+            messages.error(request, 'Este artigo ainda não foi aprovado.')
+        else:
+            messages.error(request, 'Você não tem permissão para ver este artigo.')
+        return redirect('home')
+    
+    if is_public:
+        article.increment_views()
     
     comments = article.comments.filter(approved=True)
     user_has_liked = False
@@ -76,6 +91,16 @@ def article_create(request):
             slug = f'{base_slug}-{counter}'
             counter += 1
         
+        if request.user.profile.role == 'admin':
+            approval_status = 'approved'
+            from django.utils import timezone
+            approved_by = request.user
+            approved_at = timezone.now()
+        else:
+            approval_status = 'pending'
+            approved_by = None
+            approved_at = None
+        
         article = Article.objects.create(
             title=title,
             slug=slug,
@@ -85,6 +110,9 @@ def article_create(request):
             author=request.user,
             published=published,
             featured=featured,
+            approval_status=approval_status,
+            approved_by=approved_by,
+            approved_at=approved_at,
             latitude=float(latitude) if latitude else None,
             longitude=float(longitude) if longitude else None,
             location_name=location_name
@@ -93,7 +121,10 @@ def article_create(request):
         if tags:
             article.tags.add(*[tag.strip() for tag in tags.split(',')])
         
-        messages.success(request, 'Artigo criado com sucesso!')
+        if approval_status == 'pending':
+            messages.success(request, 'Artigo criado! Aguardando aprovação do administrador.')
+        else:
+            messages.success(request, 'Artigo criado e aprovado com sucesso!')
         return redirect('article_detail', slug=article.slug)
     
     return render(request, 'articles/article_form.html')
