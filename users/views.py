@@ -16,7 +16,9 @@ def register_view(request):
             role = request.POST.get('role', 'leitor')
             if role not in ['leitor', 'jornalista']:
                 role = 'leitor'
+            location = request.POST.get('location', '')
             user.profile.role = role
+            user.profile.location = location
             user.profile.save()
             login(request, user)
             messages.success(request, 'Cadastro realizado com sucesso!')
