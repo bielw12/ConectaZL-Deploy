@@ -4,3 +4,10 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+SECRET_KEY = "64ywygcpw3nwi&eon=_hpdc0(7-%soxi!xjbcdd6m+ldtwfsl7"
+DEBUG = "True"
+ALLOWED_HOSTS = "localhost,127.0.0.1,.replit.dev,.replit.app"
