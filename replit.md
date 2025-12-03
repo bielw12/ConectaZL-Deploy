@@ -31,6 +31,13 @@ Conecta ZL is a community news portal developed in Django, focused on connecting
 - Like system for articles
 - Geolocation data for news articles
 
+## Recent Changes (December 3, 2025)
+- Added bootstrap command for automatic database initialization
+- Added MySQL support for PythonAnywhere deployment
+- Updated README with PythonAnywhere deployment instructions
+- Added mysqlclient to requirements.txt
+- Changed settings.py to use USE_SQLITE flag for database selection
+
 ## Recent Changes (December 2, 2025)
 - Added missing dependencies: dj-database-url, whitenoise
 - Configured for Replit environment with port 5000
@@ -45,7 +52,9 @@ Conecta ZL is a community news portal developed in Django, focused on connecting
 - `DEBUG`: Set to True for development
 - `SECRET_KEY`: Django secret key
 - `ALLOWED_HOSTS`: Set to * for development
-- `DATABASE_URL`: PostgreSQL URL (optional, falls back to SQLite)
+- `USE_SQLITE`: Set to True for SQLite, False for PostgreSQL/MySQL
+- `DATABASE_URL`: PostgreSQL URL (when USE_SQLITE=False)
+- `MYSQL_NAME`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_HOST`: MySQL config for PythonAnywhere
 
 ### Port Configuration
 - Development server runs on **0.0.0.0:5000** (required for Replit)
@@ -83,6 +92,9 @@ Conecta ZL is a community news portal developed in Django, focused on connecting
 ## Development Commands
 
 ```bash
+# Bootstrap (inicialização automática após clone)
+python manage.py bootstrap
+
 # Run server
 python manage.py runserver 0.0.0.0:5000
 
