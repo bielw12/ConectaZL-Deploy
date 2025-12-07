@@ -643,8 +643,8 @@ Este projeto é um software livre para fins educacionais e comunitários.
 
 ## 📞 Contato
 
-- **Website**: [Conecta ZL](https://conecta-zl.replit.app)
-- **Email**: contato@conectazl.com.br
+- **Website**: [Conecta ZL](https://gabiel.pythonanywhere.com)
+- **Email**: admin@conectazl.com.br
 
 ---
 
